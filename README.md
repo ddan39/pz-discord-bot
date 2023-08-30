@@ -14,3 +14,7 @@ the rcon program used in my 15minrestart.sh script is from https://github.com/go
 * edit pzbot.py to add in your bot code at the bottom. also change the RconPassword which is a few lines up from the bottom. probably want to also edit the allowed_roles variable near top of file for the roles in your discord server that you want to allow to run restart commands
 * probably need to edit paths to restart scripts in pzbot.py that i hardcoded since this is just my own use DIY bot. cron15minrestart.sh is a duplicate of 15minrestart.sh that i made so i can kill the specific one run by cron, using pkill.
 * run the bot: ./pzbot.py
+
+### TODO
+* probably better bot-wide rate limiting. currently only the !players command is rate limited. all the other commands can only be run by specific roles, but i guess the error message could be abused by people since it is not rate limited. i'm not sure if discord has some rate limiting built in already. i bet it does.
+* i wanted to implement a vote-for-restart feature where regular users can do a vote to kick off a restart, like if 5 people of the lowest role vote to restart all within 15 minutes it will be done, or 2 people of a specific role do. everyone else thought this would be abused, so i didn't do it.
