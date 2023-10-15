@@ -10,7 +10,6 @@ from rcon.source import rcon
 
 rate = 1.0 # unit: messages
 per  = 2.0 # unit: seconds
-allowance = rate # unit: messages
 
 allowed_roles = ['Moderators', 'Admin', 'Head Rat In Charge']
 
@@ -32,6 +31,7 @@ class PzBot(discord.Client):
         super().__init__(*args, **kwargs)
         self.restartp = None
         self.restart_timers = []
+        self.allowance = rate
         self.last_check = time.time()
 
     async def on_ready(self):
@@ -96,14 +96,14 @@ class PzBot(discord.Client):
             current = time.time()
             time_passed = current - self.last_check
             self.last_check = current
-            allowance += time_passed * (rate / per)
-            if (allowance > rate):
-                allowance = rate
-            if (allowance < 1.0):
+            self.allowance += time_passed * (rate / per)
+            if (self.allowance > rate):
+                self.allowance = rate
+            if (self.allowance < 1.0):
                 print('Hit rate limit, not responding')
                 return
             else:
-                allowance -= 1.0
+                self.allowance -= 1.0
 
             response = await rcon('players', host='127.0.0.1', port=27015, passwd='MyRconPassword')
             print(f'got response {response}')
