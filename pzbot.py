@@ -11,8 +11,6 @@ from rcon.source import rcon
 rate = 1.0 # unit: messages
 per  = 2.0 # unit: seconds
 allowance = rate # unit: messages
-last_check = time.time() # floating-point, e.g. usec accuracy. Unit: seconds
-restartp = None
 
 allowed_roles = ['Moderators', 'Admin', 'Head Rat In Charge']
 
@@ -30,17 +28,20 @@ def checkrole(author):
     return False
 
 class PzBot(discord.Client):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.restartp = None
+        self.last_check = time.time()
+
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
 
     async def on_message(self, message):
-        global last_check, allowance, restartp
-
         if message.content.startswith('!cancelrestart'):
             if checkrole(message.author):
-                if restartp is not None and restartp.poll() is None:
+                if self.restartp is not None and self.restartp.poll() is None:
                     print(f'cancel restart triggered by {message.author.global_name}')
-                    restartp.terminate()
+                    self.restartp.terminate()
                     await message.channel.send('Sent cancel to restart script.')
                 else:
                     await message.channel.send('Huh, doesn\'t look like a restart is currently running')
@@ -67,20 +68,20 @@ class PzBot(discord.Client):
 
         elif message.content.startswith('!restart'):
             if checkrole(message.author):
-                if restartp is not None and restartp.poll() is None:
+                if self.restartp is not None and self.restartp.poll() is None:
                     await message.channel.send('Restart already running')
                     return
                 print(f'restart triggered by {message.author.global_name}')
                 await message.channel.send('Restart triggered')
-                restartp = subprocess.Popen(['/home/pzserver/15minrestart.sh'])
+                self.restartp = subprocess.Popen(['/home/pzserver/15minrestart.sh'])
             else:
                 await message.channel.send('You don\'t have permission to run that command')
 
         elif message.content.startswith('!players'):
             print('received players request')
             current = time.time()
-            time_passed = current - last_check
-            last_check = current
+            time_passed = current - self.last_check
+            self.last_check = current
             allowance += time_passed * (rate / per)
             if (allowance > rate):
                 allowance = rate
