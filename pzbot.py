@@ -39,43 +39,50 @@ class PzBot(discord.Client):
     async def on_message(self, message):
         if message.content.startswith('!cancelrestart'):
             if checkrole(message.author):
-                if self.restartp is not None and self.restartp.poll() is None:
-                    print(f'cancel restart triggered by {message.author.global_name}')
-                    self.restartp.terminate()
-                    await message.channel.send('Sent cancel to restart script.')
-                else:
-                    await message.channel.send('Huh, doesn\'t look like a restart is currently running')
+                print(f'cancel restart triggered by {message.author.global_name}')
             else:
                 await message.channel.send('You don\'t have permission to run that command')
+                return
+
+            if self.restartp is not None and self.restartp.poll() is None:
+                self.restartp.terminate()
+                await message.channel.send('Sent cancel to restart script.')
+            else:
+                await message.channel.send('Huh, doesn\'t look like a restart is currently running')
 
         elif message.content.startswith('!cancelscheduledrestart'):
             if checkrole(message.author):
-                proc = await asyncio.create_subprocess_exec('pkill', '-fx', '/bin/bash /home/pzserver/cron15minrestart.sh')
-                try:
-                    await asyncio.wait_for(proc.wait(), timeout=1)
-                except TimeoutError:
-                    await message.channel.send('Error: Timed out trying to kill scheduled restart')
-                    return
-
-                if proc.returncode == 0:
-                    await message.channel.send('Found and sent kill to a running restart')
-                elif proc.returncode == 1:
-                    await message.channel.send('Didn\'t find a running restart.')
-                else:
-                    await message.channel.send('Error: unknown return code.')
+                print(f'cancel scheduled restart triggered by {message.author.global_name}')
             else:
                 await message.channel.send('You don\'t have permission to run that command')
+                return
+
+            proc = await asyncio.create_subprocess_exec('pkill', '-fx', '/bin/bash /home/pzserver/cron15minrestart.sh')
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=1)
+            except TimeoutError:
+                await message.channel.send('Error: Timed out trying to kill scheduled restart')
+                return
+
+            if proc.returncode == 0:
+                await message.channel.send('Found and sent kill to a running restart')
+            elif proc.returncode == 1:
+                await message.channel.send('Didn\'t find a running restart.')
+            else:
+                await message.channel.send('Error: unknown return code.')
 
         elif message.content.startswith('!restart'):
             if checkrole(message.author):
-                if self.restartp is not None and self.restartp.poll() is None:
-                    await message.channel.send('Restart already running')
-                    return
                 print(f'restart triggered by {message.author.global_name}')
-                await message.channel.send('Restart triggered')
-                self.restartp = subprocess.Popen(['/home/pzserver/15minrestart.sh'])
             else:
                 await message.channel.send('You don\'t have permission to run that command')
+                return
+
+            if self.restartp is not None and self.restartp.poll() is None:
+                await message.channel.send('Restart already running')
+                return
+            self.restartp = subprocess.Popen(['/home/pzserver/15minrestart.sh'])
+            await message.channel.send('Restart triggered')
 
         elif message.content.startswith('!players'):
             print('received players request')
