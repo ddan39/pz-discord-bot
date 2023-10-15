@@ -31,6 +31,7 @@ class PzBot(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.restartp = None
+        self.restart_timers = []
         self.last_check = time.time()
 
     async def on_ready(self):
@@ -49,6 +50,12 @@ class PzBot(discord.Client):
                 await message.channel.send('Sent cancel to restart script.')
             else:
                 await message.channel.send('Huh, doesn\'t look like a restart is currently running')
+
+        elif message.content.startswith('!helloworld'):
+            async def sendr():
+                await message.channel.send('hello world! its 3 seconds later!')
+
+            self.restart_timers.append(client.loop.call_later(3, sendr))
 
         elif message.content.startswith('!cancelscheduledrestart'):
             if checkrole(message.author):
